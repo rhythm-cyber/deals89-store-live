@@ -1,2 +1,1 @@
-web: gunicorn app:app
-worker: python scheduler.py
+web: gunicorn app:app --timeout 120 --workers 1 --max-requests 1000 --max-requests-jitter 50 --preload

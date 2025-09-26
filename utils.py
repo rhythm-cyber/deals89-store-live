@@ -118,8 +118,8 @@ def fetch_metadata(url):
                     delay = random.uniform(2, 5) * (attempt + 1)
                     time.sleep(delay)
                 
-                # Make request with session for cookie persistence
-                response = session.get(url, headers=headers, timeout=30, allow_redirects=True)
+                # Make request with session for cookie persistence and reduced timeout
+                response = session.get(url, headers=headers, timeout=15, allow_redirects=True)
                 response.raise_for_status()
                 
                 # Enhanced bot detection checks
