@@ -51,7 +51,12 @@ app.register_blueprint(blog.bp, url_prefix='/blog')
 def load_user(user_id):
     return Admin.query.get(int(user_id))
 
+@app.route('/health')
+def health_check():
+    """Health check endpoint for deployment monitoring"""
+    return {'status': 'healthy', 'service': 'deals89.store'}, 200
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)
