@@ -1,0 +1,481 @@
+{% extends "base.html" %}
+
+{% block title %}{{ article.title }} - Deals89 Blog{% endblock %}
+
+{% block description %}{{ article.excerpt }}{% endblock %}
+
+{% block keywords %}{{ article.tags|from_json|join(', ') if article.tags else 'shopping guide, product review, deals' }}{% endblock %}
+
+{% block og_title %}{{ article.title }}{% endblock %}
+{% block og_description %}{{ article.excerpt }}{% endblock %}
+{% block og_image %}{{ article.featured_image or url_for('static', filename='images/logo.png', _external=True) }}{% endblock %}
+
+{% block twitter_title %}{{ article.title }}{% endblock %}
+{% block twitter_description %}{{ article.excerpt }}{% endblock %}
+{% block twitter_image %}{{ article.featured_image or url_for('static', filename='images/logo.png', _external=True) }}{% endblock %}
+
+{% block extra_head %}
+<link rel="canonical" href="{{ url_for('blog.article_detail', slug=article.slug, _external=True) }}">
+<meta property="article:published_time" content="{{ article.published_at.isoformat() }}">
+<meta property="article:modified_time" content="{{ article.updated_at.isoformat() }}">
+<meta property="article:author" content="Deals89">
+<meta property="article:section" content="{{ article.category.name }}">
+{% if article.tags %}
+    {% set tag_list = article.tags|from_json %}
+    {% for tag in tag_list %}
+<meta property="article:tag" content="{{ tag }}">
+    {% endfor %}
+{% endif %}
+
+<!-- Schema.org structured data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "{{ article.title }}",
+  "description": "{{ article.excerpt }}",
+  "image": "{{ article.featured_image or url_for('static', filename='images/logo.png', _external=True) }}",
+  "author": {
+    "@type": "Organization",
+    "name": "Deals89"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Deals89",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "{{ url_for('static', filename='images/logo.png', _external=True) }}"
+    }
+  },
+  "datePublished": "{{ article.published_at.isoformat() }}",
+  "dateModified": "{{ article.updated_at.isoformat() }}",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "{{ url_for('blog.article_detail', slug=article.slug, _external=True) }}"
+  }
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Breadcrumb -->
+    <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
+        <a href="{{ url_for('main.index') }}" class="hover:text-blue-600">Home</a>
+        <i class="fas fa-chevron-right text-xs"></i>
+        <a href="{{ url_for('blog.blog_index') }}" class="hover:text-blue-600">Blog</a>
+        <i class="fas fa-chevron-right text-xs"></i>
+        <a href="{{ url_for('blog.category_articles', slug=article.category.slug) }}" class="hover:text-blue-600">{{ article.category.name }}</a>
+        <i class="fas fa-chevron-right text-xs"></i>
+        <span class="text-gray-700">{{ article.title[:50] }}{% if article.title|length > 50 %}...{% endif %}</span>
+    </nav>
+
+    <!-- Article Header -->
+    <header class="mb-8">
+        <div class="flex items-center text-sm text-gray-500 mb-4">
+            <i class="fas fa-calendar mr-2"></i>
+            <time datetime="{{ article.published_at.isoformat() }}">{{ article.published_at.strftime('%B %d, %Y') }}</time>
+            <span class="mx-3">•</span>
+            <i class="fas fa-eye mr-2"></i>
+            <span>{{ article.view_count }} views</span>
+            <span class="mx-3">•</span>
+            <i class="fas fa-clock mr-2"></i>
+            <span>{{ (article.content|length / 200)|round|int }} min read</span>
+        </div>
+        
+        <h1 class="text-4xl font-bold text-gray-900 mb-4 leading-tight">{{ article.title }}</h1>
+        
+        {% if article.excerpt %}
+        <p class="text-xl text-gray-600 leading-relaxed">{{ article.excerpt }}</p>
+        {% endif %}
+        
+        <!-- Tags -->
+        {% if article.tags %}
+        <div class="flex flex-wrap gap-2 mt-4">
+            {% set tag_list = article.tags|from_json %}
+            {% for tag in tag_list %}
+            <span class="inline-block bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">
+                #{{ tag }}
+            </span>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </header>
+
+    <!-- Social Sharing -->
+    <div class="flex items-center justify-between bg-gray-50 rounded-lg p-4 mb-8">
+        <div class="flex items-center space-x-4">
+            <span class="text-gray-700 font-medium">Share this article:</span>
+            <div class="flex items-center space-x-2">
+                <button onclick="shareArticle('facebook')" class="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm">
+                    <i class="fab fa-facebook-f mr-1"></i> Facebook
+                </button>
+                <button onclick="shareArticle('twitter')" class="bg-blue-400 text-white px-3 py-2 rounded-md hover:bg-blue-500 transition-colors text-sm">
+                    <i class="fab fa-twitter mr-1"></i> Twitter
+                </button>
+                <button onclick="shareArticle('linkedin')" class="bg-blue-700 text-white px-3 py-2 rounded-md hover:bg-blue-800 transition-colors text-sm">
+                    <i class="fab fa-linkedin-in mr-1"></i> LinkedIn
+                </button>
+                <button onclick="shareArticle('whatsapp')" class="bg-green-500 text-white px-3 py-2 rounded-md hover:bg-green-600 transition-colors text-sm">
+                    <i class="fab fa-whatsapp mr-1"></i> WhatsApp
+                </button>
+                <button onclick="copyLink()" class="bg-gray-600 text-white px-3 py-2 rounded-md hover:bg-gray-700 transition-colors text-sm">
+                    <i class="fas fa-link mr-1"></i> Copy Link
+                </button>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4">
+            <button onclick="likeArticle()" id="like-btn" class="flex items-center text-gray-600 hover:text-red-500 transition-colors">
+                <i class="fas fa-heart mr-1"></i>
+                <span id="like-count">{{ article.like_count }}</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Featured Image -->
+    {% if article.featured_image %}
+    <div class="mb-8">
+        <img src="{{ article.featured_image }}" alt="{{ article.title }}" class="w-full h-96 object-cover rounded-lg shadow-lg">
+    </div>
+    {% endif %}
+
+    <!-- Article Content -->
+    <article class="prose prose-lg max-w-none mb-12">
+        {{ article.content|safe }}
+    </article>
+
+    <!-- Related Deals -->
+    {% if related_deals %}
+    <section class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 mb-12">
+        <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="fas fa-tags text-blue-600 mr-2"></i>
+            Related Deals
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {% for deal in related_deals %}
+            <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                <img src="{{ deal.image_url }}" alt="{{ deal.title }}" class="w-full h-40 object-cover">
+                <div class="p-4">
+                    <h4 class="font-semibold text-gray-900 mb-2 line-clamp-2">{{ deal.title }}</h4>
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-2xl font-bold text-green-600">₹{{ deal.price }}</span>
+                        <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                            {{ deal.category }}
+                        </span>
+                    </div>
+                    <a href="{{ deal.affiliate_url }}" target="_blank" rel="noopener" 
+                       class="block w-full bg-blue-600 text-white text-center py-2 rounded-md hover:bg-blue-700 transition-colors">
+                        View Deal <i class="fas fa-external-link-alt ml-1"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Comments Section -->
+    <section class="mb-12">
+        <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="fas fa-comments text-blue-600 mr-2"></i>
+            Comments ({{ comments|length }})
+        </h3>
+
+        <!-- Comment Form -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h4 class="text-lg font-semibold text-gray-900 mb-4">Leave a Comment</h4>
+            <form action="{{ url_for('blog.add_comment', article_id=article.id) }}" method="POST" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                        <input type="text" id="name" name="name" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                        <input type="email" id="email" name="email" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label for="website" class="block text-sm font-medium text-gray-700 mb-1">Website (Optional)</label>
+                    <input type="url" id="website" name="website" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="content" class="block text-sm font-medium text-gray-700 mb-1">Comment *</label>
+                    <textarea id="content" name="content" rows="4" required 
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              placeholder="Share your thoughts..."></textarea>
+                </div>
+                <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-paper-plane mr-2"></i>Post Comment
+                </button>
+            </form>
+        </div>
+
+        <!-- Comments List -->
+        {% if comments %}
+        <div class="space-y-6">
+            {% for comment in comments %}
+            <div id="comment-{{ comment.id }}" class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-start space-x-4">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                            {{ comment.name[0].upper() }}
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <h5 class="font-semibold text-gray-900">
+                                {% if comment.website %}
+                                <a href="{{ comment.website }}" target="_blank" rel="noopener" class="hover:text-blue-600">
+                                    {{ comment.name }}
+                                </a>
+                                {% else %}
+                                {{ comment.name }}
+                                {% endif %}
+                            </h5>
+                            <span class="text-sm text-gray-500">
+                                <i class="fas fa-clock mr-1"></i>
+                                {{ comment.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                            </span>
+                        </div>
+                        <p class="text-gray-700 leading-relaxed">{{ comment.content }}</p>
+                        
+                        <!-- Reply Button -->
+                        <button onclick="toggleReplyForm({{ comment.id }})" class="mt-3 text-blue-600 hover:text-blue-800 text-sm font-medium">
+                            <i class="fas fa-reply mr-1"></i>Reply
+                        </button>
+                        
+                        <!-- Reply Form -->
+                        <div id="reply-form-{{ comment.id }}" class="hidden mt-4 bg-gray-50 rounded-lg p-4">
+                            <form action="{{ url_for('blog.add_comment', article_id=article.id) }}" method="POST" class="space-y-3">
+                                <input type="hidden" name="parent_id" value="{{ comment.id }}">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <input type="text" name="name" placeholder="Your name" required 
+                                           class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <input type="email" name="email" placeholder="Your email" required 
+                                           class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <textarea name="content" rows="3" placeholder="Your reply..." required 
+                                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                                <div class="flex space-x-2">
+                                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm">
+                                        Post Reply
+                                    </button>
+                                    <button type="button" onclick="toggleReplyForm({{ comment.id }})" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors text-sm">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <!-- Replies -->
+                        {% if comment.replies %}
+                        <div class="mt-4 space-y-4 border-l-2 border-gray-200 pl-4">
+                            {% for reply in comment.replies %}
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <div class="flex items-start space-x-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                                            {{ reply.name[0].upper() }}
+                                        </div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex items-center space-x-2 mb-1">
+                                            <h6 class="font-medium text-gray-900 text-sm">{{ reply.name }}</h6>
+                                            <span class="text-xs text-gray-500">
+                                                {{ reply.created_at.strftime('%B %d, %Y') }}
+                                            </span>
+                                        </div>
+                                        <p class="text-gray-700 text-sm">{{ reply.content }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-8 bg-white rounded-lg shadow-md">
+            <i class="fas fa-comments text-4xl text-gray-300 mb-4"></i>
+            <h4 class="text-lg font-semibold text-gray-600 mb-2">No Comments Yet</h4>
+            <p class="text-gray-500">Be the first to share your thoughts!</p>
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- Related Articles -->
+    {% if related_articles %}
+    <section class="mb-12">
+        <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+            <i class="fas fa-newspaper text-blue-600 mr-2"></i>
+            Related Articles
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {% for related in related_articles %}
+            <article class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                {% if related.featured_image %}
+                <img src="{{ related.featured_image }}" alt="{{ related.title }}" class="w-full h-40 object-cover">
+                {% else %}
+                <div class="w-full h-40 bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center">
+                    <i class="fas fa-newspaper text-2xl text-white"></i>
+                </div>
+                {% endif %}
+                <div class="p-4">
+                    <div class="text-sm text-gray-500 mb-2">
+                        {{ related.published_at.strftime('%B %d, %Y') }}
+                    </div>
+                    <h4 class="font-semibold text-gray-900 mb-2 line-clamp-2">
+                        <a href="{{ url_for('blog.article_detail', slug=related.slug) }}" class="hover:text-blue-600 transition-colors">
+                            {{ related.title }}
+                        </a>
+                    </h4>
+                    <p class="text-gray-600 text-sm line-clamp-2">{{ related.excerpt }}</p>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+
+<style>
+.prose {
+    color: #374151;
+    line-height: 1.75;
+}
+
+.prose h2 {
+    font-size: 1.5em;
+    font-weight: 600;
+    margin-top: 2em;
+    margin-bottom: 1em;
+    color: #111827;
+}
+
+.prose h3 {
+    font-size: 1.25em;
+    font-weight: 600;
+    margin-top: 1.6em;
+    margin-bottom: 0.6em;
+    color: #111827;
+}
+
+.prose p {
+    margin-bottom: 1.25em;
+}
+
+.prose ul, .prose ol {
+    margin-bottom: 1.25em;
+    padding-left: 1.625em;
+}
+
+.prose li {
+    margin-bottom: 0.5em;
+}
+
+.prose blockquote {
+    border-left: 4px solid #e5e7eb;
+    padding-left: 1em;
+    margin: 1.6em 0;
+    font-style: italic;
+    color: #6b7280;
+}
+
+.prose img {
+    border-radius: 0.5rem;
+    margin: 1.5em 0;
+}
+
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const articleUrl = "{{ url_for('blog.article_detail', slug=article.slug, _external=True) }}";
+const articleTitle = "{{ article.title }}";
+const articleId = {{ article.id }};
+
+function shareArticle(platform) {
+    let url = '';
+    const text = encodeURIComponent(articleTitle);
+    const shareUrl = encodeURIComponent(articleUrl);
+    
+    switch(platform) {
+        case 'facebook':
+            url = `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`;
+            break;
+        case 'twitter':
+            url = `https://twitter.com/intent/tweet?text=${text}&url=${shareUrl}`;
+            break;
+        case 'linkedin':
+            url = `https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}`;
+            break;
+        case 'whatsapp':
+            url = `https://wa.me/?text=${text}%20${shareUrl}`;
+            break;
+    }
+    
+    if (url) {
+        window.open(url, '_blank', 'width=600,height=400');
+        // Track share
+        fetch(`{{ url_for('blog.share_article', article_id=article.id) }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+    }
+}
+
+function copyLink() {
+    navigator.clipboard.writeText(articleUrl).then(() => {
+        alert('Link copied to clipboard!');
+        // Track share
+        fetch(`{{ url_for('blog.share_article', article_id=article.id) }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+    });
+}
+
+function likeArticle() {
+    const likeBtn = document.getElementById('like-btn');
+    const likeCount = document.getElementById('like-count');
+    
+    fetch(`{{ url_for('blog.like_article', article_id=article.id) }}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            likeCount.textContent = data.like_count;
+            likeBtn.classList.add('text-red-500');
+            likeBtn.classList.remove('text-gray-600');
+        }
+    });
+}
+
+function toggleReplyForm(commentId) {
+    const replyForm = document.getElementById(`reply-form-${commentId}`);
+    replyForm.classList.toggle('hidden');
+}
+</script>
+{% endblock %}

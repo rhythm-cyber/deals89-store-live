@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category.name }} - Deals89 Blog{% endblock %}
+
+{% block description %}{{ category.description or 'Browse articles in the ' + category.name + ' category. Find expert insights and guides.' }}{% endblock %}
+
+{% block keywords %}{{ category.name }}, shopping guides, product reviews, deals, {{ category.name|lower }} articles{% endblock %}
+
+{% block og_title %}{{ category.name }} Articles - Deals89 Blog{% endblock %}
+{% block og_description %}{{ category.description or 'Browse articles in the ' + category.name + ' category. Find expert insights and guides.' }}{% endblock %}
+
+{% block extra_head %}
+<link rel="canonical" href="{{ url_for('blog.category_articles', slug=category.slug, _external=True) }}">
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Breadcrumb -->
+    <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
+        <a href="{{ url_for('main.index') }}" class="hover:text-blue-600">Home</a>
+        <i class="fas fa-chevron-right text-xs"></i>
+        <a href="{{ url_for('blog.blog_index') }}" class="hover:text-blue-600">Blog</a>
+        <i class="fas fa-chevron-right text-xs"></i>
+        <span class="text-gray-700">{{ category.name }}</span>
+    </nav>
+
+    <!-- Category Header -->
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">{{ category.name }}</h1>
+        {% if category.description %}
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">{{ category.description }}</p>
+        {% endif %}
+        <div class="mt-4">
+            <span class="inline-block bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium">
+                {{ articles.total }} article{{ 's' if articles.total != 1 else '' }}
+            </span>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <!-- Main Content -->
+        <div class="lg:col-span-3">
+            {% if articles.items %}
+            <div class="space-y-8">
+                {% for article in articles.items %}
+                <article class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                    <div class="md:flex">
+                        <div class="md:w-1/3">
+                            {% if article.featured_image %}
+                            <img src="{{ article.featured_image }}" alt="{{ article.title }}" class="w-full h-48 md:h-full object-cover">
+                            {% else %}
+                            <div class="w-full h-48 md:h-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center">
+                                <i class="fas fa-newspaper text-3xl text-white"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="md:w-2/3 p-6">
+                            <div class="flex items-center text-sm text-gray-500 mb-2">
+                                <i class="fas fa-calendar mr-1"></i>
+                                <time datetime="{{ article.published_at.isoformat() }}">{{ article.published_at.strftime('%B %d, %Y') }}</time>
+                                <span class="mx-2">•</span>
+                                <i class="fas fa-eye mr-1"></i>
+                                {{ article.view_count }} views
+                                <span class="mx-2">•</span>
+                                <i class="fas fa-comments mr-1"></i>
+                                {{ article.comments|length }} comments
+                            </div>
+                            <h2 class="text-2xl font-semibold text-gray-900 mb-3">
+                                <a href="{{ url_for('blog.article_detail', slug=article.slug) }}" class="hover:text-blue-600 transition-colors">
+                                    {{ article.title }}
+                                </a>
+                            </h2>
+                            <p class="text-gray-600 mb-4 line-clamp-3">{{ article.excerpt }}</p>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-2">
+                                    {% if article.tags %}
+                                        {% set tag_list = article.tags|from_json %}
+                                        {% for tag in tag_list[:2] %}
+                                        <span class="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">
+                                            #{{ tag }}
+                                        </span>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                                <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                    <span class="flex items-center">
+                                        <i class="fas fa-heart mr-1"></i>
+                                        {{ article.like_count }}
+                                    </span>
+                                    <span class="flex items-center">
+                                        <i class="fas fa-share mr-1"></i>
+                                        {{ article.share_count }}
+                                    </span>
+                                    <a href="{{ url_for('blog.article_detail', slug=article.slug) }}" class="text-blue-600 hover:text-blue-800 font-medium">
+                                        Read More <i class="fas fa-arrow-right ml-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if articles.pages > 1 %}
+            <nav class="flex justify-center mt-12">
+                <div class="flex items-center space-x-2">
+                    {% if articles.has_prev %}
+                    <a href="{{ url_for('blog.category_articles', slug=category.slug, page=articles.prev_num) }}" class="px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                    {% endif %}
+                    
+                    {% for page_num in articles.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != articles.page %}
+                            <a href="{{ url_for('blog.category_articles', slug=category.slug, page=page_num) }}" class="px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                                {{ page_num }}
+                            </a>
+                            {% else %}
+                            <span class="px-3 py-2 bg-blue-600 border border-blue-600 rounded-md text-white">
+                                {{ page_num }}
+                            </span>
+                            {% endif %}
+                        {% else %}
+                        <span class="px-3 py-2 text-gray-500">…</span>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if articles.has_next %}
+                    <a href="{{ url_for('blog.category_articles', slug=category.slug, page=articles.next_num) }}" class="px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </nav>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-12">
+                <i class="fas fa-newspaper text-6xl text-gray-300 mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-600 mb-2">No Articles in This Category</h3>
+                <p class="text-gray-500 mb-6">Check back soon for new content in {{ category.name }}!</p>
+                <a href="{{ url_for('blog.blog_index') }}" class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors">
+                    Browse All Articles
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="lg:col-span-1">
+            <!-- Back to Blog -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <a href="{{ url_for('blog.blog_index') }}" class="flex items-center text-blue-600 hover:text-blue-800 font-medium">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to All Articles
+                </a>
+            </div>
+
+            <!-- Search -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Search Articles</h3>
+                <form action="{{ url_for('blog.search_articles') }}" method="GET" class="space-y-3">
+                    <input type="text" name="q" placeholder="Search articles..." 
+                           value="{{ request.args.get('q', '') }}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-search mr-2"></i>Search
+                    </button>
+                </form>
+            </div>
+
+            <!-- Other Categories -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Other Categories</h3>
+                <ul class="space-y-2">
+                    {% for cat in category.query.filter(category.id != category.id).all() %}
+                    <li>
+                        <a href="{{ url_for('blog.category_articles', slug=cat.slug) }}" 
+                           class="flex items-center justify-between text-gray-700 hover:text-blue-600 transition-colors">
+                            <span>{{ cat.name }}</span>
+                            <i class="fas fa-chevron-right text-xs"></i>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Newsletter Signup -->
+            <div class="bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg shadow-md p-6 text-white">
+                <h3 class="text-lg font-semibold mb-4">Stay Updated</h3>
+                <p class="text-blue-100 mb-4">Get the latest {{ category.name|lower }} articles and deals delivered to your inbox.</p>
+                <form id="category-newsletter-form" class="space-y-3">
+                    <input type="email" name="email" placeholder="Your email address" required
+                           class="w-full px-3 py-2 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-white">
+                    <button type="submit" class="w-full bg-white text-blue-600 py-2 rounded-md hover:bg-gray-100 transition-colors font-medium">
+                        Subscribe
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Category newsletter subscription
+document.getElementById('category-newsletter-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const form = this;
+    const email = form.querySelector('input[name="email"]').value;
+    const button = form.querySelector('button[type="submit"]');
+    
+    // Disable button and show loading
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Subscribing...';
+    
+    // Send request
+    fetch('{{ url_for("main.newsletter_subscribe") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'email=' + encodeURIComponent(email)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            button.innerHTML = '<i class="fas fa-check mr-2"></i>Subscribed!';
+            button.className = 'w-full bg-green-500 text-white py-2 rounded-md font-medium';
+            form.reset();
+        } else {
+            button.innerHTML = 'Try Again';
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        button.innerHTML = 'Try Again';
+        alert('An error occurred. Please try again.');
+    })
+    .finally(() => {
+        setTimeout(() => {
+            button.disabled = false;
+            button.innerHTML = 'Subscribe';
+            button.className = 'w-full bg-white text-blue-600 py-2 rounded-md hover:bg-gray-100 transition-colors font-medium';
+        }, 3000);
+    });
+});
+</script>
+{% endblock %}

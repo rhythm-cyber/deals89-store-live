@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+
+{% block title %}{% if query %}Search Results for "{{ query }}" - Deals89 Blog{% else %}Search Articles - Deals89 Blog{% endif %}{% endblock %}
+
+{% block description %}{% if query %}Search results for "{{ query }}" in our blog articles. Find relevant shopping guides and product reviews.{% else %}Search through our collection of shopping guides, product reviews, and deal analysis articles.{% endif %}{% endblock %}
+
+{% block keywords %}search, blog articles, {{ query if query else 'shopping guides' }}, product reviews, deals{% endblock %}
+
+{% block extra_head %}
+<link rel="canonical" href="{{ url_for('blog.search_articles', _external=True) }}">
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Breadcrumb -->
+    <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
+        <a href="{{ url_for('main.index') }}" class="hover:text-blue-600">Home</a>
+        <i class="fas fa-chevron-right text-xs"></i>
+        <a href="{{ url_for('blog.blog_index') }}" class="hover:text-blue-600">Blog</a>
+        <i class="fas fa-chevron-right text-xs"></i>
+        <span class="text-gray-700">Search{% if query %}: "{{ query }}"{% endif %}</span>
+    </nav>
+
+    <!-- Search Header -->
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">
+            {% if query %}
+            Search Results for "{{ query }}"
+            {% else %}
+            Search Articles
+            {% endif %}
+        </h1>
+        {% if query and articles.total %}
+        <p class="text-xl text-gray-600">Found {{ articles.total }} article{{ 's' if articles.total != 1 else '' }} matching your search</p>
+        {% elif query %}
+        <p class="text-xl text-gray-600">No articles found matching your search</p>
+        {% else %}
+        <p class="text-xl text-gray-600">Search through our collection of shopping guides and reviews</p>
+        {% endif %}
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <!-- Main Content -->
+        <div class="lg:col-span-3">
+            <!-- Search Form -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <form action="{{ url_for('blog.search_articles') }}" method="GET" class="flex space-x-4">
+                    <input type="text" name="q" placeholder="Search articles..." 
+                           value="{{ query or '' }}"
+                           class="flex-1 px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg">
+                    <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-search mr-2"></i>Search
+                    </button>
+                </form>
+            </div>
+
+            {% if query %}
+                {% if articles.items %}
+                <!-- Search Results -->
+                <div class="space-y-8">
+                    {% for article in articles.items %}
+                    <article class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                        <div class="md:flex">
+                            <div class="md:w-1/3">
+                                {% if article.featured_image %}
+                                <img src="{{ article.featured_image }}" alt="{{ article.title }}" class="w-full h-48 md:h-full object-cover">
+                                {% else %}
+                                <div class="w-full h-48 md:h-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center">
+                                    <i class="fas fa-newspaper text-3xl text-white"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="md:w-2/3 p-6">
+                                <div class="flex items-center text-sm text-gray-500 mb-2">
+                                    <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs mr-3">
+                                        {{ article.category.name }}
+                                    </span>
+                                    <i class="fas fa-calendar mr-1"></i>
+                                    <time datetime="{{ article.published_at.isoformat() }}">{{ article.published_at.strftime('%B %d, %Y') }}</time>
+                                    <span class="mx-2">•</span>
+                                    <i class="fas fa-eye mr-1"></i>
+                                    {{ article.view_count }} views
+                                </div>
+                                <h2 class="text-2xl font-semibold text-gray-900 mb-3">
+                                    <a href="{{ url_for('blog.article_detail', slug=article.slug) }}" class="hover:text-blue-600 transition-colors">
+                                        {{ article.title }}
+                                    </a>
+                                </h2>
+                                <p class="text-gray-600 mb-4 line-clamp-3">{{ article.excerpt }}</p>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        {% if article.tags %}
+                                            {% set tag_list = article.tags|from_json %}
+                                            {% for tag in tag_list[:2] %}
+                                            <span class="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">
+                                                #{{ tag }}
+                                            </span>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                        <span class="flex items-center">
+                                            <i class="fas fa-heart mr-1"></i>
+                                            {{ article.like_count }}
+                                        </span>
+                                        <span class="flex items-center">
+                                            <i class="fas fa-comments mr-1"></i>
+                                            {{ article.comments|length }}
+                                        </span>
+                                        <a href="{{ url_for('blog.article_detail', slug=article.slug) }}" class="text-blue-600 hover:text-blue-800 font-medium">
+                                            Read More <i class="fas fa-arrow-right ml-1"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if articles.pages > 1 %}
+                <nav class="flex justify-center mt-12">
+                    <div class="flex items-center space-x-2">
+                        {% if articles.has_prev %}
+                        <a href="{{ url_for('blog.search_articles', q=query, page=articles.prev_num) }}" class="px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        {% endif %}
+                        
+                        {% for page_num in articles.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != articles.page %}
+                                <a href="{{ url_for('blog.search_articles', q=query, page=page_num) }}" class="px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                                    {{ page_num }}
+                                </a>
+                                {% else %}
+                                <span class="px-3 py-2 bg-blue-600 border border-blue-600 rounded-md text-white">
+                                    {{ page_num }}
+                                </span>
+                                {% endif %}
+                            {% else %}
+                            <span class="px-3 py-2 text-gray-500">…</span>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if articles.has_next %}
+                        <a href="{{ url_for('blog.search_articles', q=query, page=articles.next_num) }}" class="px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </nav>
+                {% endif %}
+                {% else %}
+                <!-- No Results -->
+                <div class="text-center py-12 bg-white rounded-lg shadow-md">
+                    <i class="fas fa-search text-6xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-600 mb-2">No Articles Found</h3>
+                    <p class="text-gray-500 mb-6">We couldn't find any articles matching "{{ query }}". Try different keywords or browse our categories.</p>
+                    
+                    <!-- Search Suggestions -->
+                    <div class="max-w-md mx-auto">
+                        <h4 class="text-lg font-medium text-gray-700 mb-4">Try searching for:</h4>
+                        <div class="flex flex-wrap gap-2 justify-center">
+                            <a href="{{ url_for('blog.search_articles', q='electronics') }}" class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm hover:bg-blue-200 transition-colors">
+                                Electronics
+                            </a>
+                            <a href="{{ url_for('blog.search_articles', q='fashion') }}" class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm hover:bg-purple-200 transition-colors">
+                                Fashion
+                            </a>
+                            <a href="{{ url_for('blog.search_articles', q='home') }}" class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm hover:bg-green-200 transition-colors">
+                                Home & Kitchen
+                            </a>
+                            <a href="{{ url_for('blog.search_articles', q='deals') }}" class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm hover:bg-red-200 transition-colors">
+                                Deals
+                            </a>
+                            <a href="{{ url_for('blog.search_articles', q='reviews') }}" class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm hover:bg-yellow-200 transition-colors">
+                                Reviews
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8">
+                        <a href="{{ url_for('blog.blog_index') }}" class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors">
+                            Browse All Articles
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            {% else %}
+            <!-- Search Landing -->
+            <div class="bg-white rounded-lg shadow-md p-8 text-center">
+                <i class="fas fa-search text-6xl text-blue-500 mb-6"></i>
+                <h3 class="text-2xl font-semibold text-gray-900 mb-4">Search Our Articles</h3>
+                <p class="text-gray-600 mb-8 max-w-2xl mx-auto">
+                    Find exactly what you're looking for in our collection of shopping guides, product reviews, and deal analysis. 
+                    Use keywords, product names, or categories to discover relevant content.
+                </p>
+                
+                <!-- Popular Searches -->
+                <div class="mb-8">
+                    <h4 class="text-lg font-medium text-gray-700 mb-4">Popular Searches:</h4>
+                    <div class="flex flex-wrap gap-3 justify-center">
+                        <a href="{{ url_for('blog.search_articles', q='best deals') }}" class="bg-blue-100 text-blue-800 px-4 py-2 rounded-full hover:bg-blue-200 transition-colors">
+                            Best Deals
+                        </a>
+                        <a href="{{ url_for('blog.search_articles', q='buying guide') }}" class="bg-green-100 text-green-800 px-4 py-2 rounded-full hover:bg-green-200 transition-colors">
+                            Buying Guide
+                        </a>
+                        <a href="{{ url_for('blog.search_articles', q='product review') }}" class="bg-purple-100 text-purple-800 px-4 py-2 rounded-full hover:bg-purple-200 transition-colors">
+                            Product Review
+                        </a>
+                        <a href="{{ url_for('blog.search_articles', q='electronics') }}" class="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full hover:bg-yellow-200 transition-colors">
+                            Electronics
+                        </a>
+                        <a href="{{ url_for('blog.search_articles', q='fashion') }}" class="bg-pink-100 text-pink-800 px-4 py-2 rounded-full hover:bg-pink-200 transition-colors">
+                            Fashion
+                        </a>
+                    </div>
+                </div>
+                
+                <a href="{{ url_for('blog.blog_index') }}" class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors">
+                    Browse All Articles
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="lg:col-span-1">
+            <!-- Search Tips -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
+                    Search Tips
+                </h3>
+                <ul class="space-y-2 text-sm text-gray-600">
+                    <li class="flex items-start">
+                        <i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i>
+                        Use specific product names for better results
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i>
+                        Try category names like "electronics" or "fashion"
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i>
+                        Search for "buying guide" or "review" for specific content types
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check text-green-500 mr-2 mt-1 text-xs"></i>
+                        Use quotes for exact phrase matching
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Categories -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Browse by Category</h3>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{{ url_for('blog.search_articles', q='electronics') }}" class="flex items-center justify-between text-gray-700 hover:text-blue-600 transition-colors">
+                            <span>Electronics</span>
+                            <i class="fas fa-chevron-right text-xs"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('blog.search_articles', q='fashion') }}" class="flex items-center justify-between text-gray-700 hover:text-blue-600 transition-colors">
+                            <span>Fashion</span>
+                            <i class="fas fa-chevron-right text-xs"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('blog.search_articles', q='home') }}" class="flex items-center justify-between text-gray-700 hover:text-blue-600 transition-colors">
+                            <span>Home & Kitchen</span>
+                            <i class="fas fa-chevron-right text-xs"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('blog.search_articles', q='books') }}" class="flex items-center justify-between text-gray-700 hover:text-blue-600 transition-colors">
+                            <span>Books</span>
+                            <i class="fas fa-chevron-right text-xs"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('blog.search_articles', q='health') }}" class="flex items-center justify-between text-gray-700 hover:text-blue-600 transition-colors">
+                            <span>Health & Beauty</span>
+                            <i class="fas fa-chevron-right text-xs"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Recent Articles -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Articles</h3>
+                <div class="space-y-4">
+                    <!-- This would be populated with recent articles from the database -->
+                    <div class="text-center text-gray-500 py-4">
+                        <i class="fas fa-newspaper text-2xl mb-2"></i>
+                        <p class="text-sm">Recent articles will appear here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+</style>
+{% endblock %}

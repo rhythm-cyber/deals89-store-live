@@ -1,0 +1,26 @@
+{
+  "name": "deals89-store",
+  "version": "1.0.0",
+  "description": "Affiliate deal aggregator for deals under ₹1000",
+  "main": "index.js",
+  "scripts": {
+    "build-css": "tailwindcss -i ./static/css/tailwind.css -o ./static/css/style.css --watch",
+    "build-css-prod": "tailwindcss -i ./static/css/tailwind.css -o ./static/css/style.css --minify",
+    "dev": "npm run build-css",
+    "build": "npm run build-css-prod"
+  },
+  "keywords": [
+    "deals",
+    "affiliate",
+    "ecommerce",
+    "flask",
+    "tailwindcss"
+  ],
+  "author": "Deals89 Store",
+  "license": "MIT",
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.5.7",
+    "@tailwindcss/typography": "^0.5.10",
+    "tailwindcss": "^3.4.0"
+  }
+}

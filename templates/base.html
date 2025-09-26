@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Deals89 - Best Deals Under ₹1000{% endblock %}</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="{% block description %}Find the best deals under ₹1000 on Amazon and Flipkart. Daily updated affiliate deals with huge discounts.{% endblock %}">
+    <meta name="keywords" content="{% block keywords %}deals, discounts, amazon deals, flipkart deals, under 1000 rupees, affiliate deals{% endblock %}">
+    <meta name="author" content="Deals89">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="{% block og_title %}Deals89 - Best Deals Under ₹1000{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Find the best deals under ₹1000 on Amazon and Flipkart. Daily updated affiliate deals with huge discounts.{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{{ url_for('static', filename='images/logo.png') }}{% endblock %}">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:type" content="website">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}Deals89 - Best Deals Under ₹1000{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Find the best deals under ₹1000 on Amazon and Flipkart. Daily updated affiliate deals with huge discounts.{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}{{ url_for('static', filename='images/logo.png', _external=True) }}{% endblock %}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    
+    <!-- Tailwind CSS - Production Build -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Google Analytics -->
+    {% if config.get('GOOGLE_ANALYTICS_ID') %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ config.GOOGLE_ANALYTICS_ID }}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '{{ config.GOOGLE_ANALYTICS_ID }}');
+    </script>
+    {% endif %}
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="{{ url_for('main.index') }}" class="flex items-center">
+                        <i class="fas fa-tags text-2xl text-blue-600 mr-2"></i>
+                        <span class="text-xl font-bold text-gray-800">Deals89</span>
+                        <span class="ml-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Under ₹1000</span>
+                    </a>
+                </div>
+                
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="{{ url_for('main.index') }}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Home</a>
+                    <a href="{{ url_for('blog.blog_index') }}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Blog</a>
+                    <a href="{{ url_for('main.search') }}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Search</a>
+                    <div class="relative group">
+                        <button class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                            Categories <i class="fas fa-chevron-down ml-1"></i>
+                        </button>
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block">
+                            <a href="{{ url_for('main.category', category_name='Electronics') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Electronics</a>
+                            <a href="{{ url_for('main.category', category_name='Fashion') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Fashion</a>
+                            <a href="{{ url_for('main.category', category_name='Home') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Home & Kitchen</a>
+                            <a href="{{ url_for('main.category', category_name='Books') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Books</a>
+                            <a href="{{ url_for('main.category', category_name='Health') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Health & Beauty</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Mobile menu button -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-button" class="text-gray-700 hover:text-blue-600 focus:outline-none">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Navigation -->
+        <div id="mobile-menu" class="md:hidden hidden bg-white border-t">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="{{ url_for('main.index') }}" class="block px-3 py-2 text-gray-700 hover:text-blue-600">Home</a>
+                <a href="{{ url_for('blog.blog_index') }}" class="block px-3 py-2 text-gray-700 hover:text-blue-600">Blog</a>
+                <a href="{{ url_for('main.search') }}" class="block px-3 py-2 text-gray-700 hover:text-blue-600">Search</a>
+                <a href="{{ url_for('main.category', category_name='Electronics') }}" class="block px-3 py-2 text-gray-700 hover:text-blue-600">Electronics</a>
+                <a href="{{ url_for('main.category', category_name='Fashion') }}" class="block px-3 py-2 text-gray-700 hover:text-blue-600">Fashion</a>
+                <a href="{{ url_for('main.category', category_name='Home') }}" class="block px-3 py-2 text-gray-700 hover:text-blue-600">Home & Kitchen</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'error' }} mb-4 p-4 rounded-lg {% if category == 'success' %}bg-green-100 border border-green-400 text-green-700{% else %}bg-red-100 border border-red-400 text-red-700{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div class="col-span-1 md:col-span-2">
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-tags text-2xl text-blue-400 mr-2"></i>
+                        <span class="text-xl font-bold">Deals89</span>
+                    </div>
+                    <p class="text-gray-300 mb-4">Your daily source for the best deals under ₹1000. We curate amazing products at unbeatable prices.</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-300 hover:text-white"><i class="fab fa-telegram text-xl"></i></a>
+                        <a href="#" class="text-gray-300 hover:text-white"><i class="fab fa-facebook text-xl"></i></a>
+                        <a href="#" class="text-gray-300 hover:text-white"><i class="fab fa-twitter text-xl"></i></a>
+                        <a href="#" class="text-gray-300 hover:text-white"><i class="fab fa-whatsapp text-xl"></i></a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="{{ url_for('main.index') }}" class="text-gray-300 hover:text-white">Home</a></li>
+                        <li><a href="{{ url_for('main.search') }}" class="text-gray-300 hover:text-white">Search Deals</a></li>
+                        <li><a href="{{ url_for('main.category', category_name='Electronics') }}" class="text-gray-300 hover:text-white">Electronics</a></li>
+                        <li><a href="{{ url_for('main.category', category_name='Fashion') }}" class="text-gray-300 hover:text-white">Fashion</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Newsletter</h3>
+                    <p class="text-gray-300 mb-4">Get daily deals in your inbox</p>
+                    <form id="newsletter-form" class="flex">
+                        <input type="email" 
+                               id="newsletter-email" 
+                               name="email" 
+                               placeholder="Your email" 
+                               required
+                               class="flex-1 px-3 py-2 bg-gray-700 text-white rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button type="submit" 
+                                id="newsletter-btn"
+                                class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-r-md transition-colors">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                    <div id="newsletter-message" class="mt-2 text-sm hidden"></div>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center">
+                <p class="text-gray-300">&copy; 2024 Deals89. All rights reserved. | <a href="#" class="hover:text-white">Privacy Policy</a> | <a href="#" class="hover:text-white">Terms of Service</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        });
+        
+        // Auto-hide flash messages
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                alert.style.display = 'none';
+            });
+        }, 5000);
+        
+        // Newsletter subscription
+        document.getElementById('newsletter-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const form = this;
+            const email = document.getElementById('newsletter-email').value;
+            const button = document.getElementById('newsletter-btn');
+            const message = document.getElementById('newsletter-message');
+            
+            // Disable button and show loading
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            
+            // Send request
+            fetch('{{ url_for("main.newsletter_subscribe") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'email=' + encodeURIComponent(email)
+            })
+            .then(response => response.json())
+            .then(data => {
+                message.classList.remove('hidden');
+                if (data.success) {
+                    message.className = 'mt-2 text-sm text-green-400';
+                    message.textContent = data.message;
+                    form.reset();
+                } else {
+                    message.className = 'mt-2 text-sm text-red-400';
+                    message.textContent = data.message;
+                }
+            })
+            .catch(error => {
+                message.classList.remove('hidden');
+                message.className = 'mt-2 text-sm text-red-400';
+                message.textContent = 'An error occurred. Please try again.';
+            })
+            .finally(() => {
+                // Re-enable button
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                
+                // Hide message after 5 seconds
+                setTimeout(() => {
+                    message.classList.add('hidden');
+                }, 5000);
+            });
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

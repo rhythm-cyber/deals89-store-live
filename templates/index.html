@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+
+{% block title %}Deals89 - Best Deals Under ₹1000{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white p-8 mb-8">
+    <div class="text-center">
+        <h1 class="text-4xl md:text-6xl font-bold mb-4">
+            <i class="fas fa-fire text-orange-400"></i> Hot Deals Under ₹1000
+        </h1>
+        <p class="text-xl md:text-2xl mb-6">Discover amazing products at unbeatable prices!</p>
+        <div class="flex justify-center items-center space-x-4">
+            <span class="bg-white text-blue-600 px-4 py-2 rounded-full font-semibold">
+                <i class="fas fa-check-circle"></i> Daily Updated
+            </span>
+            <span class="bg-white text-blue-600 px-4 py-2 rounded-full font-semibold">
+                <i class="fas fa-rupee-sign"></i> Under ₹1000
+            </span>
+            <span class="bg-white text-blue-600 px-4 py-2 rounded-full font-semibold">
+                <i class="fas fa-star"></i> Best Quality
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Search Bar -->
+<div class="mb-8">
+    <form action="{{ url_for('main.search') }}" method="GET" class="max-w-2xl mx-auto">
+        <div class="relative">
+            <input type="text" name="q" placeholder="Search for deals..." 
+                   class="w-full px-4 py-3 pl-12 pr-20 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            <button type="submit" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md">
+                Search
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Stats -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-white rounded-lg shadow-md p-6 text-center">
+        <i class="fas fa-tags text-3xl text-blue-600 mb-2"></i>
+        <h3 class="text-2xl font-bold text-gray-800">{{ deals.total }}</h3>
+        <p class="text-gray-600">Active Deals</p>
+    </div>
+    <div class="bg-white rounded-lg shadow-md p-6 text-center">
+        <i class="fas fa-rupee-sign text-3xl text-green-600 mb-2"></i>
+        <h3 class="text-2xl font-bold text-gray-800">Under ₹1000</h3>
+        <p class="text-gray-600">Price Range</p>
+    </div>
+    <div class="bg-white rounded-lg shadow-md p-6 text-center">
+        <i class="fas fa-clock text-3xl text-orange-600 mb-2"></i>
+        <h3 class="text-2xl font-bold text-gray-800">Daily</h3>
+        <p class="text-gray-600">Updates</p>
+    </div>
+</div>
+
+<!-- Deals Grid -->
+{% if deals.items %}
+<div class="mb-8">
+    <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">
+        <i class="fas fa-fire text-red-500"></i> Latest Deals
+    </h2>
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {% for deal in deals.items %}
+        <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+            <!-- Deal Image -->
+            <div class="relative">
+                {% if deal.image_url %}
+                <img src="{{ deal.image_url }}" alt="{{ deal.title }}" 
+                     class="w-full h-48 object-cover"
+                     onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='">
+                {% else %}
+                <div class="w-full h-48 bg-gray-200 flex items-center justify-center">
+                    <i class="fas fa-image text-4xl text-gray-400"></i>
+                </div>
+                {% endif %}
+                
+                <!-- Price Badge -->
+                <div class="absolute top-2 left-2">
+                    <span class="bg-green-500 text-white px-2 py-1 rounded-full text-sm font-bold">
+                        ₹{{ "%.0f"|format(deal.price) }}
+                    </span>
+                </div>
+                
+                <!-- Under 1000 Badge -->
+                <div class="absolute top-2 right-2">
+                    <span class="bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+                        Under ₹1000
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Deal Content -->
+            <div class="p-4">
+                <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2 hover:text-blue-600">
+                    <a href="{{ url_for('main.deal_detail', deal_id=deal.id) }}">
+                        {{ deal.title[:60] }}{% if deal.title|length > 60 %}...{% endif %}
+                    </a>
+                </h3>
+                
+                {% if deal.summary %}
+                <p class="text-gray-600 text-sm mb-3 line-clamp-2">
+                    {{ deal.summary[:100] }}{% if deal.summary|length > 100 %}...{% endif %}
+                </p>
+                {% endif %}
+                
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-2xl font-bold text-green-600">₹{{ "%.0f"|format(deal.price) }}</span>
+                    {% if deal.category %}
+                    <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
+                        {{ deal.category }}
+                    </span>
+                    {% endif %}
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex space-x-2">
+                    <a href="{{ deal.affiliate_url }}" target="_blank" rel="noopener noreferrer"
+                       class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-4 rounded-md font-semibold transition-colors duration-200">
+                        <i class="fas fa-shopping-cart mr-1"></i> Buy Now
+                    </a>
+                    <a href="{{ url_for('main.deal_detail', deal_id=deal.id) }}"
+                       class="bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-3 rounded-md transition-colors duration-200">
+                        <i class="fas fa-info-circle"></i>
+                    </a>
+                </div>
+                
+                <!-- Share Buttons -->
+                <div class="flex justify-center space-x-3 mt-3 pt-3 border-t border-gray-100">
+                    <a href="https://wa.me/?text=Check out this deal: {{ deal.title }} for ₹{{ deal.price }} - {{ url_for('main.deal_detail', deal_id=deal.id, _external=True) }}" 
+                       target="_blank" class="text-green-600 hover:text-green-700">
+                        <i class="fab fa-whatsapp text-lg"></i>
+                    </a>
+                    <a href="https://t.me/share/url?url={{ url_for('main.deal_detail', deal_id=deal.id, _external=True) }}&text={{ deal.title }}" 
+                       target="_blank" class="text-blue-500 hover:text-blue-600">
+                        <i class="fab fa-telegram text-lg"></i>
+                    </a>
+                    <a href="https://twitter.com/intent/tweet?text={{ deal.title }}&url={{ url_for('main.deal_detail', deal_id=deal.id, _external=True) }}" 
+                       target="_blank" class="text-blue-400 hover:text-blue-500">
+                        <i class="fab fa-twitter text-lg"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Latest Blog Articles Section -->
+{% if latest_articles %}
+<div class="mb-8">
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-3xl font-bold text-gray-800">
+            <i class="fas fa-newspaper text-blue-500"></i> Latest Articles
+        </h2>
+        <a href="{{ url_for('blog.blog_index') }}" class="text-blue-600 hover:text-blue-800 font-medium">
+            View All Articles <i class="fas fa-arrow-right ml-1"></i>
+        </a>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for article in latest_articles %}
+        <article class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+            <div class="relative">
+                {% if article.featured_image %}
+                <img src="{{ article.featured_image }}" alt="{{ article.title }}" class="w-full h-48 object-cover">
+                {% else %}
+                <div class="w-full h-48 bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
+                    <i class="fas fa-newspaper text-4xl text-white"></i>
+                </div>
+                {% endif %}
+                <div class="absolute top-2 left-2">
+                    <span class="bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-medium">
+                        {{ article.category.name }}
+                    </span>
+                </div>
+            </div>
+            <div class="p-4">
+                <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600">
+                    <a href="{{ url_for('blog.article_detail', slug=article.slug) }}">
+                        {{ article.title }}
+                    </a>
+                </h3>
+                <p class="text-gray-600 text-sm mb-3 line-clamp-3">{{ article.excerpt }}</p>
+                <div class="flex items-center justify-between text-xs text-gray-500 mb-3">
+                    <span class="flex items-center">
+                        <i class="fas fa-calendar mr-1"></i>
+                        {{ article.published_at.strftime('%b %d, %Y') if article.published_at else article.created_at.strftime('%b %d, %Y') }}
+                    </span>
+                    <span class="flex items-center">
+                        <i class="fas fa-eye mr-1"></i>
+                        {{ article.view_count }} views
+                    </span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3 text-xs text-gray-500">
+                        <span class="flex items-center">
+                            <i class="fas fa-heart mr-1"></i>
+                            {{ article.like_count }}
+                        </span>
+                        <span class="flex items-center">
+                            <i class="fas fa-comments mr-1"></i>
+                            {{ article.comments|length }}
+                        </span>
+                    </div>
+                    <a href="{{ url_for('blog.article_detail', slug=article.slug) }}" 
+                       class="text-blue-600 hover:text-blue-800 font-medium text-sm">
+                        Read More <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Pagination -->
+{% if deals.pages > 1 %}
+<div class="flex justify-center mt-8">
+    <nav class="flex items-center space-x-2">
+        {% if deals.has_prev %}
+        <a href="{{ url_for('main.index', page=deals.prev_num) }}" 
+           class="px-3 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        {% endif %}
+        
+        {% for page_num in deals.iter_pages() %}
+            {% if page_num %}
+                {% if page_num != deals.page %}
+                <a href="{{ url_for('main.index', page=page_num) }}" 
+                   class="px-3 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                    {{ page_num }}
+                </a>
+                {% else %}
+                <span class="px-3 py-2 bg-blue-600 text-white border border-blue-600 rounded-md">
+                    {{ page_num }}
+                </span>
+                {% endif %}
+            {% else %}
+            <span class="px-3 py-2">...</span>
+            {% endif %}
+        {% endfor %}
+        
+        {% if deals.has_next %}
+        <a href="{{ url_for('main.index', page=deals.next_num) }}" 
+           class="px-3 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+            <i class="fas fa-chevron-right"></i>
+        </a>
+        {% endif %}
+    </nav>
+</div>
+{% endif %}
+
+{% else %}
+<!-- No Deals -->
+<div class="text-center py-16">
+    <i class="fas fa-search text-6xl text-gray-300 mb-4"></i>
+    <h2 class="text-2xl font-bold text-gray-600 mb-2">No deals found</h2>
+    <p class="text-gray-500">Check back later for new deals!</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add to favorites functionality (placeholder)
+function addToFavorites(dealId) {
+    // Implementation for favorites
+    console.log('Added deal ' + dealId + ' to favorites');
+}
+
+// Track clicks for analytics
+document.querySelectorAll('a[href*="amazon."], a[href*="flipkart."]').forEach(function(link) {
+    link.addEventListener('click', function() {
+        // Track affiliate link clicks
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'click', {
+                'event_category': 'affiliate_link',
+                'event_label': this.href
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

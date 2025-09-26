@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Deal - Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="{{ url_for('admin.dashboard') }}" class="text-blue-600 hover:text-blue-700 mr-4">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                    <i class="fas fa-plus-circle text-2xl text-blue-600 mr-2"></i>
+                    <span class="text-xl font-bold text-gray-800">Add New Deal</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('admin.dashboard') }}" class="text-gray-700 hover:text-blue-600">Dashboard</a>
+                    <a href="{{ url_for('admin.logout') }}" class="text-red-600 hover:text-red-700">
+                        <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-6 p-4 rounded-lg {% if category == 'success' %}bg-green-100 border border-green-400 text-green-700{% else %}bg-red-100 border border-red-400 text-red-700{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Instructions -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+            <h3 class="text-lg font-semibold text-blue-900 mb-2">
+                <i class="fas fa-info-circle mr-2"></i>How to Add a Deal
+            </h3>
+            <ul class="text-blue-800 space-y-1">
+                <li>• Enter the affiliate URL (Amazon, Flipkart, etc.)</li>
+                <li>• The system will automatically fetch title, image, and description</li>
+                <li>• Only deals ≤ ₹1000 will be accepted</li>
+                <li>• Affiliate tags will be added automatically if missing</li>
+                <li>• You can override any auto-fetched information</li>
+            </ul>
+        </div>
+
+        <!-- Add Deal Form -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Deal Information</h2>
+            </div>
+            
+            <form method="POST" class="p-6 space-y-6">
+                <!-- Affiliate URL -->
+                <div>
+                    <label for="affiliate_url" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-link mr-1"></i> Affiliate URL *
+                    </label>
+                    <input type="url" id="affiliate_url" name="affiliate_url" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="https://amazon.in/dp/... or https://flipkart.com/...">
+                    <p class="mt-1 text-sm text-gray-500">Enter the full affiliate URL from Amazon, Flipkart, or other supported sites</p>
+                </div>
+
+                <!-- Title -->
+                <div>
+                    <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-heading mr-1"></i> Title
+                    </label>
+                    <input type="text" id="title" name="title"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="Leave empty to auto-fetch from URL">
+                    <p class="mt-1 text-sm text-gray-500">Override the auto-fetched title if needed</p>
+                </div>
+
+                <!-- Summary -->
+                <div>
+                    <label for="summary" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-align-left mr-1"></i> Summary/Description
+                    </label>
+                    <textarea id="summary" name="summary" rows="3"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="Leave empty to auto-fetch from URL"></textarea>
+                    <p class="mt-1 text-sm text-gray-500">Override the auto-fetched description if needed</p>
+                </div>
+
+                <!-- Image URL -->
+                <div>
+                    <label for="image_url" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-image mr-1"></i> Image URL
+                    </label>
+                    <input type="url" id="image_url" name="image_url"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="Leave empty to auto-fetch from URL">
+                    <p class="mt-1 text-sm text-gray-500">Override the auto-fetched image if needed</p>
+                </div>
+
+                <!-- Category -->
+                <div>
+                    <label for="category" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-tag mr-1"></i> Category
+                    </label>
+                    <select id="category" name="category"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Select Category</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Fashion">Fashion</option>
+                        <option value="Home">Home & Kitchen</option>
+                        <option value="Books">Books</option>
+                        <option value="Health">Health & Beauty</option>
+                        <option value="Sports">Sports & Fitness</option>
+                        <option value="Toys">Toys & Games</option>
+                        <option value="Automotive">Automotive</option>
+                        <option value="General">General</option>
+                    </select>
+                </div>
+
+                <!-- Price -->
+                <div>
+                    <label for="price" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-rupee-sign mr-1"></i> Price (₹)
+                    </label>
+                    <input type="number" id="price" name="price" step="0.01" min="0" max="100"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="Leave empty to auto-fetch from URL">
+                    <p class="mt-1 text-sm text-gray-500">
+                        <span class="text-red-600 font-medium">Important:</span> Only deals ≤ ₹1000 will be accepted. Leave empty to auto-detect price.
+                    </p>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+                    <a href="{{ url_for('admin.dashboard') }}" 
+                       class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <i class="fas fa-times mr-1"></i> Cancel
+                    </a>
+                    
+                    <button type="submit" 
+                            class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        <i class="fas fa-plus mr-1"></i> Add Deal
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tips -->
+        <div class="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-yellow-900 mb-2">
+                <i class="fas fa-lightbulb mr-2"></i>Pro Tips
+            </h3>
+            <ul class="text-yellow-800 space-y-1">
+                <li>• Amazon URLs: Make sure they contain the product ASIN (e.g., /dp/B08XYZ123/)</li>
+                <li>• Flipkart URLs: Use the direct product page URL</li>
+                <li>• The system will automatically remove tracking parameters and add your affiliate tags</li>
+                <li>• If price detection fails, enter the price manually</li>
+                <li>• Duplicate URLs (same canonical URL) will be rejected</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Auto-focus on URL field
+        document.getElementById('affiliate_url').focus();
+        
+        // Price validation
+        document.getElementById('price').addEventListener('input', function() {
+            const price = parseFloat(this.value);
+            const helpText = this.nextElementSibling;
+            
+            if (price > 1000) {
+                this.classList.add('border-red-500');
+                helpText.innerHTML = '<span class="text-red-600 font-medium">Error:</span> Price must be ≤ ₹1000. This deal will be rejected.';
+            } else {
+                this.classList.remove('border-red-500');
+                helpText.innerHTML = '<span class="text-red-600 font-medium">Important:</span> Only deals ≤ ₹1000 will be accepted. Leave empty to auto-detect price.';
+            }
+        });
+    </script>
+</body>
+</html>
