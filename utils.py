@@ -75,6 +75,18 @@ def fetch_metadata(url):
     except Exception as e:
         print(f"Cache error: {e}")
     
+    # Circuit breaker: if we've had too many failures recently, return fallback
+    failure_key = f"scraping_failures_{urlparse(url).netloc}"
+    try:
+        from cache_manager import get_cache
+        cache = get_cache()
+        failures = cache.get(failure_key) or 0
+        if failures >= 3:  # Circuit breaker threshold
+            print(f"Circuit breaker active for {urlparse(url).netloc}, returning fallback")
+            return get_fallback_metadata(url)
+    except:
+        pass
+    
     try:
         # Enhanced user agents with more realistic browser fingerprints
         user_agents = [
@@ -91,11 +103,12 @@ def fetch_metadata(url):
         # Create a session for cookie persistence
         session = requests.Session()
         
-        for attempt in range(len(user_agents)):
+                # Reduce attempts to prevent timeout
+                for attempt in range(2):  # Reduced from 5 to 2 attempts
             try:
                 # Enhanced headers with more realistic browser behavior
                 headers = {
-                    'User-Agent': user_agents[attempt],
+                    'User-Agent': user_agents[attempt % len(user_agents)],  # Cycle through available agents
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
                     'Accept-Language': 'en-US,en;q=0.9,hi;q=0.8',
                     'Accept-Encoding': 'gzip, deflate, br',
@@ -140,7 +153,7 @@ def fetch_metadata(url):
                     "text/html" not in response.headers.get('content-type', '').lower()
                 )
                 
-                if is_blocked and attempt < len(user_agents) - 1:
+                if is_blocked and attempt < 1:  # Only retry once
                     print(f"Attempt {attempt + 1} blocked, trying next user agent...")
                     continue  # Try next user agent
                 
@@ -274,19 +287,55 @@ def fetch_metadata(url):
         except Exception as e:
             print(f"Selenium fallback failed: {e}")
         
-        # If all attempts failed, return error
-        return {
-            'title': 'Unable to fetch title (all methods failed)',
-            'description': 'Unable to fetch description (all methods failed)',
-            'image_url': None,
-            'price': None
-        }
+        # If all attempts failed, record failure and return fallback
+        try:
+            from cache_manager import get_cache
+            cache = get_cache()
+            failure_key = f"scraping_failures_{urlparse(url).netloc}"
+            failures = cache.get(failure_key) or 0
+            cache.set(failure_key, failures + 1, duration=3600)  # Track failures for 1 hour
+        except:
+            pass
+            
+        return get_fallback_metadata(url)
         
     except Exception as e:
         print(f"Error fetching metadata: {e}")
+        # Record failure
+        try:
+            from cache_manager import get_cache
+            cache = get_cache()
+            failure_key = f"scraping_failures_{urlparse(url).netloc}"
+            failures = cache.get(failure_key) or 0
+            cache.set(failure_key, failures + 1, duration=3600)
+        except:
+            pass
+            
+        return get_fallback_metadata(url)
+
+def get_fallback_metadata(url):
+    """Return fallback metadata when scraping fails"""
+    domain = urlparse(url).netloc.lower()
+    
+    # Domain-specific fallbacks
+    if 'amazon' in domain:
         return {
-            'title': 'Error fetching title',
-            'description': 'Error fetching description',
+            'title': 'Amazon Product (Title unavailable)',
+            'description': 'Product details could not be fetched from Amazon',
+            'image_url': None,
+            'price': None
+        }
+    elif 'flipkart' in domain:
+        return {
+            'title': 'Flipkart Product (Title unavailable)',
+            'description': 'Product details could not be fetched from Flipkart',
+            'image_url': None,
+            'price': None
+        }
+    else:
+        return {
+            'title': 'Product (Title unavailable)',
+            'description': 'Product details could not be fetched',
             'image_url': None,
             'price': None
         }

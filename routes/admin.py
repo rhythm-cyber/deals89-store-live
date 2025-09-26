@@ -95,8 +95,30 @@ def add_deal():
             # Add affiliate tag if missing
             affiliate_url = add_affiliate_tag(affiliate_url)
             
-            # Fetch metadata if not provided
-            metadata = fetch_metadata(canonical_url)
+            # Fetch metadata if not provided (with timeout protection)
+            try:
+                import signal
+                
+                def timeout_handler(signum, frame):
+                    raise TimeoutError("Metadata fetch timeout")
+                
+                # Set a 30-second timeout for metadata fetching
+                signal.signal(signal.SIGALRM, timeout_handler)
+                signal.alarm(30)
+                
+                metadata = fetch_metadata(canonical_url)
+                
+                # Clear the alarm
+                signal.alarm(0)
+                
+            except (TimeoutError, Exception) as e:
+                print(f"Metadata fetch failed or timed out: {e}")
+                metadata = {
+                    'title': 'Product (Manual entry required)',
+                    'description': 'Please enter product details manually',
+                    'image_url': None,
+                    'price': None
+                }
             
             # Use manual data or fallback to fetched metadata
             final_title = title or metadata.get('title', 'No title')
